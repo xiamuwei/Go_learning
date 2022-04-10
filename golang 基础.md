@@ -1,4 +1,4 @@
- golang 基础
+ # golang 基础
 
 ## 一、变量
 
@@ -29,13 +29,19 @@ func main (){
     short_variable := 5
     // 等价于
     var short_variable int 
-    short_variable =
+    short_variable = 5
 }
 ```
 
 
 
-+ 常量 const PI int = 3
++ 常量 
+
+  ```golang
+  const PI int = 3
+  ```
+
+  
 
 
 
@@ -81,6 +87,10 @@ golang在不同类型的变量之间赋值时需要==显示转换==，也就是�
 var a int = 100
 var b float32 = float32(a)
 
+var bool_var bool = false
+// v2 := int32(bool_var) cannot convert bool_var (type bool) to type int32
+
+// string和基本数据类型之间使用：strconv包实现了基本数据类型和其字符串表示的相互转换。
 // 二、基本数据类型和string之间转换
 /*	1、基本类型转string类型
 	使用fmt.Sprintf("%参数", 表达式) ，根据format参数生成格式化的字符串并返回该字符串
@@ -103,7 +113,6 @@ if err != nil {
 	fmt.Println("string转成基本类型失败，报错如下 = ", err)
 }
 fmt.Printf("d = %v ,d 的数据类型为%T ", d, d)
-
 ```
 
 
@@ -469,6 +478,8 @@ golang中的方法是作用在指定的数据类型上的(即：和指定的数�
 
 
 
+
+
 ## 八、数组
 
 数组可以存放多个同一类型的数据
@@ -680,9 +691,29 @@ var ptr *int = &num
 
 
 
-## 单元测试
+## 测试
 
 ![image-20220329151211396](C:\Users\asus\AppData\Roaming\Typora\typora-user-images\image-20220329151211396.png)
+
+文件名：xxx_test.go
+
+函数名：TestXxxx( t *testing.T )
+
+```go
+package variable_test
+
+import (
+	"fmt"
+	"testing"
+)
+
+// Test后接字母大写或者下划线，参数必须是*testing.T
+func TestVariable(t *testing.T) {
+	fmt.Println("this is test function")
+}
+```
+
+
 
 
 
