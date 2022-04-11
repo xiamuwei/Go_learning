@@ -68,6 +68,7 @@ func Test_circle(t *testing.T) {
 	}
 
 }
+<<<<<<< HEAD
 
 // goto
 func Test_goto(t *testing.T) {
@@ -84,3 +85,5 @@ func Test_goto(t *testing.T) {
 breakTag:
 	fmt.Println("跳到goto flag")
 }
+=======
+>>>>>>> c65af61a0ca2fa85f82484fac7985c9d1857fd0f
