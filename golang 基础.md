@@ -1761,6 +1761,112 @@ func main() {
 Go程序在运行期使用**reflect**包访问程序的反射信息。
 
 ```go
+// reflect.TypeOf()函数可以获得任意值的类型对象（reflect.Type）
+package reflect_test
+
+import (
+	"fmt"
+	"reflect"
+	"testing"
+)
+
+type MyInt int
+
+func Test_reflect(t *testing.T) {
+	var a int
+	reflectType(a)
+
+	var myint MyInt
+	reflectType(myint)
+
+	var b rune
+	reflectType(b)
+}
+
+func reflectType(x interface{}) {
+	t := reflect.TypeOf(x)
+	fmt.Printf("type:%v kind:%v\n", t.Name(), t.Kind())
+}
+
+// 结果
+/*
+kind 指的是底层的类型
+*/
+type:int kind:int
+type:MyInt kind:int
+type:int32 kind:int32
+```
+
+```go
+// reflect.ValueOf()返回的是reflect.Value类型，其中包含了原始值的值信息。reflect.Value与原始值之间可以互相转换
+
+// 通过反射获取值
+package reflect_test
+
+import (
+	"fmt"
+	"reflect"
+	"testing"
+)
+
+type MyInt int
+
+func Test_reflect(t *testing.T) {
+	var a int
+	reflectType(a)
+
+	var myint MyInt
+	reflectType(myint)
+
+	var b rune
+	reflectType(b)
+
+	var pointer *int
+	reflectType(pointer)
+}
+
+func reflectType(x interface{}) {
+	t := reflect.TypeOf(x)
+	fmt.Printf("type:%v kind:%v\n", t.Name(), t.Kind())
+}
+
+func Test_reflect_value(t *testing.T) {
+	var a float32 = 3.14
+	reflectValue(a)
+	c := reflect.ValueOf(10)
+	fmt.Printf("type c :%T\n", c)
+}
+func reflectValue(x interface{}) {
+	v := reflect.ValueOf(x)
+	k := v.Kind()
+
+	switch k {
+	case reflect.Int32:
+		// v.Int()从反射中获取整型的原始值，然后通过int64()强制类型转换
+		fmt.Printf("type is int64, value is %d\n", int32(v.Int()))
+	case reflect.Bool:
+		// v.Int()从反射中获取整型的原始值，然后通过int64()强制类型转换
+		fmt.Printf("type is int64, value is %v\n", bool(v.Bool()))
+	default:
+		fmt.Printf("cant know the type")
+	}
+}
+
+
+// 通过反射设置变量的值
+
+func main (){
+    var num int = 2
+	reflectSetValue(&num) // 必须传递变量地址才能修改变量值
+	fmt.Println("num = ", num)
+}
+
+func reflectSetValue(x interface{}) {
+	v := reflect.ValueOf(x)
+	if v.Kind() == reflect.Int64 {
+		v.SetInt(200)
+	}
+}
 ```
 
 
