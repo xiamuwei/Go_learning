@@ -1,4 +1,4 @@
- golang 基础
+ # golang 基础
 
 ## 一、变量
 
@@ -29,13 +29,19 @@ func main (){
     short_variable := 5
     // 等价于
     var short_variable int 
-    short_variable =
+    short_variable = 5
 }
 ```
 
 
 
-+ 常量 const PI int = 3
++ 常量 
+
+  ```golang
+  const PI int = 3
+  ```
+
+  
 
 
 
@@ -81,6 +87,10 @@ golang在不同类型的变量之间赋值时需要==显示转换==，也就是�
 var a int = 100
 var b float32 = float32(a)
 
+var bool_var bool = false
+// v2 := int32(bool_var) cannot convert bool_var (type bool) to type int32
+
+// string和基本数据类型之间使用：strconv包实现了基本数据类型和其字符串表示的相互转换。
 // 二、基本数据类型和string之间转换
 /*	1、基本类型转string类型
 	使用fmt.Sprintf("%参数", 表达式) ，根据format参数生成格式化的字符串并返回该字符串
@@ -103,7 +113,6 @@ if err != nil {
 	fmt.Println("string转成基本类型失败，报错如下 = ", err)
 }
 fmt.Printf("d = %v ,d 的数据类型为%T ", d, d)
-
 ```
 
 
@@ -112,7 +121,16 @@ fmt.Printf("d = %v ,d 的数据类型为%T ", d, d)
 >
 > 基本语法: type 自定义数据类型别名 数据类型   // 相当于一个别名
 >
+> ```go
 > type myInt int  // 值得注意的是此时int 和 myInt会被golang认为是两种不同类型
+> ```
+>
+> 类型别名
+>
+> ```go
+> type byte = uint8
+> type rune = int32
+> ```
 
 
 
@@ -286,6 +304,24 @@ fmt.Printf("d = %v ,d 的数据类型为%T ", d, d)
 
 > goto 
 >
+> ```go
+> func Test_goto(t *testing.T) {
+> 
+> 	for i := 0; i < 10; i++ {
+> 		for j := 0; j < 10; j++ {
+> 			if j == 2 {
+>                 // goto 设置跳转到flag处，并从flag处再开始重新往后执行
+> 				goto breakTag
+> 			}
+> 			fmt.Printf("i = %v,j = %v\n", i, j)
+> 		}
+> 	}
+> 
+> breakTag:
+> 	fmt.Println("跳到goto flag")
+> }
+> ```
+>
 > break
 >
 > continue
@@ -306,6 +342,117 @@ func 函数名(形参列表) (返回值列表){
     return 返回值列表 //返回值按照情况可以没有，且可以同时返回多个值
 } 
 ```
+
+
+
+**可变参数**
+
+本质上，函数的可变参数可以通过切片来实现
+
+```go
+func Test_varargus(t *testing.T) {
+	variable_num(1, 2)
+	variable_num(1, 2, 3, 4)
+}
+
+func variable_num(num ...int) {
+	fmt.Printf("the type of num = %T \n", num)
+	for k, v := range num {
+		fmt.Printf("k = %v ,v = %v\n", k, v)
+	}
+}
+
+// 结果：
+the type of num = []int 
+k = 0 ,v = 1
+k = 1 ,v = 2
+the type of num = []int
+k = 0 ,v = 1
+k = 1 ,v = 2
+k = 2 ,v = 3
+k = 3 ,v = 4
+```
+
+
+
+**返回值**
+
+golang中函数支持多返回值
+
+```go
+func Test_calc(t *testing.T) {
+	sum1, sub1 := calcDemo1(1, 2)
+	fmt.Printf("sum1 = %v ,sub1 = %v\n", sum1, sub1)
+	sum2, sub2 := calcDemo2(1, 2)
+	fmt.Printf("sum2 = %v ,sub2 = %v\n", sum2, sub2)
+}
+
+func calcDemo1(a, b int) (int, int) {
+	sum := a + b
+	sub := a - b
+	return sum, sub
+}
+
+// 函数定义时可以给返回值命名，并在函数体中直接使用这些变量
+func calcDemo2(a, b int) (sum, sub int) {
+	sum = a + b
+	sub = a - b
+	return
+}
+```
+
+
+
+**==defer==**
+
+```go
+func Test_deferDemo1(t *testing.T) {
+    // defer 语法会将后面跟随的语句进行延迟处理。在defer归属的函数即将返回的时候，将延迟处理的语句将defer定义的逆序进行执行，也就是说，先将defer的语句最后被执行，最后被defer的语句，最先被执行
+	fmt.Println("start")
+	defer fmt.Println(1)
+	defer fmt.Println(2)
+	defer fmt.Println(3)
+	fmt.Println("end")
+}
+// 结果
+start
+end
+3
+2
+1
+
+func Test_deferDemo2(t *testing.T) {
+	defer fmt.Println(1)
+    // 如果有panic，panic之前的defer语句将正常执行，但panic之后的将无法执行
+	panic("this is panic")
+	defer fmt.Println(2)
+	return
+}
+
+// 结果
+=== RUN   Test_deferDemo2
+2
+1
+--- FAIL: Test_deferDemo2 (0.00s)
+panic: this is panic [recovered]
+        panic: this is panic
+
+
+
+func Test_deferDemo3(t *testing.T) {
+	a := 1
+	defer fmt.Println(" a = ", a)
+	a++
+}
+
+// 结果
+a = 1
+
+```
+
+
+
+
 
 
 
@@ -351,6 +498,28 @@ func 函数名(形参列表) (返回值列表){
 
   **闭包就是一个函数 和与其相关的引用环境组合的一个整体**
 
+  ```go
+  func TestClosure(t *testing.T) {
+      // f 是一个函数，并且他引用了其外部作用域中的x变量，此时f就是一个闭包。在f的生命周期内，变量x也一直有效
+  	var f = adder()
+  	fmt.Println(f(10))
+  	fmt.Println(f(20))
+  	fmt.Println(f(30))
+  }
+  
+  func adder() func(int) int {
+  	var x int
+  	return func(y int) int {
+  		x += y
+  		return x
+  	}
+  }
+  // 结果：
+  10
+  30
+  60
+  ```
+  
   > [闭包的使用场景](https://www.html.cn/qa/other/23216.html)
   >
   > 1. 使用闭包代替全局变量；
@@ -362,7 +531,7 @@ func 函数名(形参列表) (返回值列表){
 
 
 
-**可变参数**
+
 
 
 
@@ -371,6 +540,41 @@ func 函数名(形参列表) (返回值列表){
 值类型：基本数据类型、string、数组、结构体
 
 引用类型：接口、函数、map、通道、切片、指针等
+
+```go
+func Test_pass(t *testing.T) {
+	// 值传递
+	num := 1
+	value_pass(num)
+	fmt.Println("num = ", num)
+
+	// 引用传递
+	slice := []int{1, 2, 3}
+	pointer_pass(slice)
+	for k, v := range slice {
+		fmt.Printf("k = %v ,v = %v\n", k, v)
+	}
+}
+
+func value_pass(num int) {
+	num++
+	fmt.Println("num = ", num)
+}
+
+func pointer_pass(slice []int) {
+	for k, v := range slice {
+		v++
+		slice[k] = v
+		fmt.Printf("k = %v ,v = %v\n", k, v)
+	}
+}
+```
+
+
+
+
+
+
 
 
 
@@ -399,6 +603,7 @@ golang中抛出一个panic的异常，然后在defer中通过recover捕获这个
 ```GO
 func testForPanic() {
 	defer func() {
+        // recover()用于将panic的信息捕捉，且recover必须定义在panic之前的defer语句。
 		err := recover()
 		if err != nil {
 			fmt.Println("recover err = ", err)
@@ -455,15 +660,227 @@ type 结构体名称 struct{
 
 }
 
+```go
+package struct_test
+
+import (
+	"fmt"
+	"testing"
+)
+
+// 定义
+type Person struct {
+	name, city string
+	age        int
+}
+
+func Test_struct(t *testing.T) {
+	// 实例化 var 结构体实例 结构体类型
+	var p1 Person
+	// . 赋值
+	p1.name = "jack"
+	p1.city = "New York"
+	p1.age = 18
+	fmt.Println(p1)
+
+	// 使用键值对初始化
+	var p2 = Person{
+		name: "candy",
+		city: "Canada",
+	}
+	fmt.Println(p2)
+
+	// 直接使用值对初始化简写，此时必须初始化结构体的所有字段，且初始值的填充顺序必须与字段在结构体中的声明顺序一致。
+	var p3 = Person{
+		"candy",
+		"Canada",
+		18,
+	}
+	fmt.Println(p3)
+}
+```
+
 
 
 
 
 方法
 
+```go
+func (接收者变量 接收者类型) 方法名(参数列表) (返回参数) {
+    函数体
+}
+```
+
 golang中的方法是作用在指定的数据类型上的(即：和指定的数据类型绑定)，因此自定义类型都可以有方法，而不仅仅是struct，比如int，float32等都可以有方法
 
+```go
+package struct_test
 
+import (
+	"fmt"
+	"testing"
+)
+
+// 定义
+type Person struct {
+	name, city string
+	age        int
+}
+
+func (p Person) SetAge(newAge int) {
+	p.age = newAge
+}
+
+func (p *Person) SetAgePointer(newAge int) {
+	p.age = newAge
+}
+func Test_struct(t *testing.T) {
+	// 实例化 var 结构体实例 结构体类型
+	var p1 Person
+	// . 赋值
+	p1.name = "jack"
+	p1.city = "New York"
+	p1.age = 18
+	
+	p1.SetAge(30)
+	fmt.Println(p1)
+	p1.SetAgePointer(30)
+	fmt.Println(p1)
+}
+
+// 结果
+{jack New York 18}
+{jack New York 30}
+
+
+
+// 任意类型添加方法,但是**非本地类型不能定义方法，也就是说我们不能给别的包的类型定义方法。**
+type MyInt int
+
+func (i MyInt) sayHello() {
+	fmt.Println("this is ", i)
+}
+
+func Test_int(t *testing.T) {
+	var a MyInt = 1
+	a.sayHello()
+}
+```
+
+
+
+嵌套结构体
+
+```go
+type Address struct {
+	Province string
+	City     string
+}
+
+type User struct {
+	Name, Gender string
+	Address // 匿名字段
+}
+
+func Test_anonymous(t *testing.T) {
+	user := User{
+		Name:   "jack",
+		Gender: "boy",
+		Address: Address{
+			Province: "New York",
+			City:     "no",
+		},
+	}
+    user.Address.Province = "山东"    // 匿名字段默认使用类型名作为字段名
+	user.City = "威海"                // 匿名字段可以省略
+	fmt.Println(user)
+}
+
+```
+
+注：golang中可以通过嵌套匿名结构体实现继承
+
+```golang
+type Animal struct {
+	name string
+}
+
+func (a *Animal) move() {
+	fmt.Printf("%v 会动\n", a.name)
+}
+
+type Dog struct {
+	Feet    int
+	*Animal // 通过匿名结构体实现继承
+}
+
+func (d *Dog) bark() {
+	fmt.Printf("%v会汪汪汪~\n", d.name)
+}
+
+func Test_extends(t *testing.T) {
+	dog := Dog{
+		Feet: 4,
+		Animal: &Animal{
+			name: "little",
+		},
+	}
+
+	dog.bark()
+	dog.move()
+}
+// 结果
+little会汪汪汪~
+little 会动
+```
+
+
+
+
+
+序列化与反序列化
+
+序列化(Serialization) 是将对象的状态信息转换为可以存储或者传输的形式的过程。在序列化期间，对象将其当前状态写入到临时或者持久性存储区
+
+通过从存储区中读取对象的状态，重新创建该对象，则为反序列化
+
+简单来说：
+
+把对象转换为字节序列的过程称为对象的序列化；
+把字节序列恢复为对象的过程称为对象的反序列化
+
+序列化的作用
+（1）把对象的字节序列永久地保存到硬盘上，通常存放在一个文件中
+（2）在网络上传送对象的字节序列。
+
+
+
+```go
+type Person struct {
+	Name    string
+	Gender  string
+	Age     int
+	address string
+}
+
+func TestSerialization(t *testing.T) {
+	p1 := Person{
+		"jack",
+		"boy",
+		18,
+		"New York",
+	}
+	// 序列化
+	p, _ := json.Marshal(p1)
+	fmt.Println(p)
+
+	var p2 Person
+    // 反序列化 
+	json.Unmarshal(p, &p2)
+	fmt.Println(p2)
+}
+```
 
 
 
@@ -471,7 +888,11 @@ golang中的方法是作用在指定的数据类型上的(即：和指定的数�
 
 ## 八、数组
 
+**golang中数组是值类型**
+
 数组可以存放多个同一类型的数据
+
+
 
 创建数组
 
@@ -547,7 +968,7 @@ slice2[0] = 50
 slice2 = append(slice2, 100) 
 fmt.Println("slice2 = ", slice2)
 // 结果 slice2 =  [50 0 0 0 0 100]
-
+slice = append(slice, anotherSlice…) // 最后这三个点点点要加上，不然会报错，这是用于两个切片的合并的
 
 // 切片的遍历，请参照数组的遍历
 ```
@@ -600,9 +1021,11 @@ map的增删改查
 map2["test1"] = "value"
 map2["test3"] = "c"
 fmt.Println("map2 = ", map2)
+
 // 删除，使用delete，无法一次性全部清空map，可以遍历逐个删除
 delete(map2, "test1")
 fmt.Println("map2 = ", map2)
+
 // 查
 res, ok := map2["test3"]
 if !ok {
@@ -615,6 +1038,23 @@ if !ok {
 
 
 map遍历参照数组的遍历
+
+```go
+// 创建map
+var map1 map[string]string
+// 使用之前一定要make初始化一下
+map1 := make(map[string]string,5)
+map1["a"] = "A"
+map1["b"] = "B"
+map1["c"] = "C"
+
+// 遍历
+for k,v := range map1{
+    fmt.Printf("k = %v , v = %v\n",k,v)
+}
+```
+
+
 
 
 
@@ -640,12 +1080,70 @@ type 接口名 interface {
 
 }
 
+```go
+package interface_test
+
+// 定义一个接口
+type Usb interface{
+	start()
+	stop()
+}
+
+type Phone struct {}
+
+func (p Phone) start(){
+	fmt.Println("手机开始工作...")
+}
+func (p Phone) stop(){
+	fmt.Println("手机停止工作...")
+}
+
+type Camera struct {}
+
+func (c Camera) start(){
+	fmt.Println("相机开始工作...")
+}
+func (c Camera) stop(){
+	fmt.Println("相机停止工作...")
+}
+
+type Computer struct {}
+// 接收一个Usb类型的变量，只要实现Usb接口都可。usb变量会根据传入的实参，判断到底是Phone类型，还是Camera类型，再调用相应的方法实现
+func (c Computer) Working (usb Usb){
+	usb.start()
+	usb.stop()
+}
+
+
+
+func Test_interface(t *testing.T){
+	computer := Computer{}
+	phone := Phone{}
+	camera := Camera{}
+	computer.Working(phone)
+	computer.Working(camera)
+
+}
+```
+
+
+
 注：
 
 1. 接口体中的所有方法都没有方法体，即接口的方法都是没有实现的方法；
-2. golang中的接口，不需要显式的实现，只要有一个变量，含有接口类型中的所有方法，那么这个变量就实现这个接口;
+2. golang中的接口，==不需要显式的实现，只要有一个变量，含有接口类型中的所有方法，那么这个变量就实现这个接口==;
 3. golang接口中不能有任何变量
 4. 空接口interface{} 没有任何方法，所有类型都是实现了空接口，即我们可以把任何一个变量赋给空接口
+
+
+
+
+
+空接口
+
+空接口就是不包含任何方法的接口，因此，所有的类型都实现了空接口
+
+虽然空接口起不到任何作用，但是空接口在需要存储任何类型数值的时候非常有用，故可以存储任意类型的数据
 
 
 
@@ -655,7 +1153,23 @@ type 接口名 interface {
 
 由于接口是一般类型，不知道具体类型，如果要转成具体类型，就需要使用类型断言
 
-## 
+语法 t.(type)
+
+```go
+// 进行类型断言的时候，如果类型不匹配，就会报panic，因为进行类型断言时，要确保原来的空接口指向的就是断言的类型
+var a interface{}
+var num float64 = 3.14
+a = num
+if b, ok := a.(float64); ok {
+    fmt.Println(b)
+} else {
+    fmt.Println("转换错误...")
+}
+```
+
+
+
+
 
 
 
@@ -663,9 +1177,43 @@ type 接口名 interface {
 
 指针类型，指针变量存的是一个地址，这个地址指向的空间存的才是值
 
+```go
 var num int = 5
-
+// 使用&操作符取地址后会获得这个变量的指针，然后可以对指针使用*操作，也就是指针类型
+// 取地址操作符&和取值操作符*是一对互补操作符，&取出地址，*根据地址取出地址指向的值
 var ptr *int = &num
+fmt.Println(*ptr)
+```
+
+
+
+
+
+new 和make
+
+new和make均是用于分配内存：
+
+new用于值类型和用户定义的类型，如自定义类型；make用于内置引用类型（切片、map和管道）
+
++ new函数分配内存，make函数初始化
++ new 为每个新的类型T分配一片内存，初始化为0并且返回类型为*T的内存地址：这种方法返回一个指向类型为T，值为0的地址的指针，它适用于值类型如数组和结构体
++ make返回一个类型为T的初始值。它适用于3种内建的引用类型：切片slice、map和channel。因为这三种本身就是引用类型，没有必要返回它们的指针。
+
+```go
+func main() {
+	var a *int
+    // new函数返回的是指针
+	a = new(int)
+	*a = 10
+	fmt.Println(*a)
+
+	var b map[string]int
+    b = make(map[string]int,10)
+	b["沙河娜扎"] = 100 // 引用类型使用之前必须分配内存空间
+    
+	fmt.Println(b)
+}
+```
 
 
 
@@ -675,14 +1223,37 @@ var ptr *int = &num
 
 + 特性
   + 封装
+    + 跟访问权限有关，即函数名，变量名等的首字母大小写来决定
   + 继承
+    + golang中结构体可以通过嵌套匿名结构体来实现继承
   + 多态
+    + 用接口实现：某个类型的实例可以赋给它所实现的任意接口类型的变量
 
 
 
-## 单元测试
+## 测试
 
 ![image-20220329151211396](C:\Users\asus\AppData\Roaming\Typora\typora-user-images\image-20220329151211396.png)
+
+文件名：xxx_test.go
+
+函数名：TestXxxx( t *testing.T )
+
+```go
+package variable_test
+
+import (
+	"fmt"
+	"testing"
+)
+
+// Test后接字母大写或者下划线，参数必须是*testing.T
+func TestVariable(t *testing.T) {
+	fmt.Println("this is test function")
+}
+```
+
+
 
 
 
@@ -720,25 +1291,475 @@ go test -v -run TestAddUpper
 
 
 
-读文件
++ 打开文件
 
-写文件
+  ```go
+  // os.Open(name string) (file *File, err error)
+  // os.OpenFile(name string, flag int, perm FileMode) (file *File, err error)
+  func Test_file(t *testing.T) {
+  	str := "D:\\gorepository\\Go_learning\\learn_go\\src\\file\\go.mod"
+  	
+  	file, err := os.OpenFile(str, os.O_RDONLY, 0666)
+  	if err != nil {
+  		fmt.Println(" os.OpenFile err = ", err)
+  	}
+  	defer file.Close()
+  }
+  ```
 
-序列化 及 反序列化
+  | 模式          | **含义** |
+  | ------------- | -------- |
+  | `os.O_WRONLY` | 只写     |
+  | `os.O_CREATE` | 创建文件 |
+  | `os.O_RDONLY` | 只读     |
+  | `os.O_RDWR`   | 读写     |
+  | `os.O_TRUNC`  | 清空     |
+  | `os.O_APPEND` | 追加     |
+
+  perm：文件权限，一个八进制数。r(读取) 04，w(写) 02， x(执行) 01
+
+
+
++ 读文件
+
+  + 基本使用
+
+    ```go
+    func Test_fileDemo1(t *testing.T) {
+    	str := "./test"
+    	
+        // 1、 打开文件
+    	file, err := os.OpenFile(str, os.O_RDONLY, 0666)
+    	if err != nil {
+    		// fmt.Println(errors.New("cant open this file ..."))
+    		fmt.Println(" os.OpenFile err = ", err)
+    	}
+        // 4、 关闭文件
+    	defer file.Close()
+    
+        // 2、 创建buf，用于缓存数据
+    	buf := make([]byte, 16)
+    	var content []byte
+    	for {
+            // 3、使用Read函数读取文件内容到buf中，直至文件读取完毕
+    		n, err1 := file.Read(buf)
+    		if err1 == io.EOF {
+    			// fmt.Println(errors.New("cant open this file ..."))
+    			fmt.Println("文件读取结束...")
+    			break
+    		}
+    
+            // 这里的buf[:n]...必须加上... , 表示两个切片的拼接
+    		content = append(content, buf[:n]...)
+    
+    	}
+    
+    	fmt.Println(string(content))
+    }
+    ```
+
+    
+
+  + 带缓冲，使用bufio
+
+    ```go
+    func Test_fileDemo3(t *testing.T) {
+    	// 1 打开文件
+    	file, err := os.OpenFile("./test", os.O_RDONLY, 0666)
+    	if err != nil {
+    		fmt.Println("os.OpenFile err = ", err)
+    	}
+    
+    	// 记得及时关闭文件
+    	defer file.Close()
+    
+    	//
+    	reader := bufio.NewReader(file)
+    	for {
+    		// reader.ReadString 读取直到第一次遇到\n ，返回一个包含已读取的数据和\n的字符串
+    		line, err := reader.ReadString('\n')
+    		if err == io.EOF {
+    			if len(line) != 0 {
+    				fmt.Println(line)
+    			}
+    			fmt.Println("文件读完了")
+    			break
+    		}
+    		if err != nil {
+    			fmt.Println("read file failed, err:", err)
+    			return
+    		}
+    
+    		fmt.Println(line)
+    	}
+    }
+    ```
+
+    
+
+  + 不带缓冲，使用ioutil 一次性将整个文件读入内存，适合文件不大的情况
+
+    ```go
+    func Test_fileDemo4(t *testing.T) {
+    	// 打开读写文件一步完成
+    	content, err := ioutil.ReadFile("./test")
+    	if err != nil {
+    		fmt.Println("ioutil.ReadFile  err:", err)
+    	}
+    	fmt.Println(string(content))
+    
+    }
+    ```
+
+    
+
++ 写文件
+
+  + 基本使用
+
+    ```go
+    func Test_writeDemo1(t *testing.T) {
+    	file, err := os.OpenFile("./write_test", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
+    	if err != nil {
+    		fmt.Println("os.OpenFile err = ", err)
+    		return
+    	}
+    	defer file.Close()
+    
+    	file.Write([]byte("hello golang"))
+    	file.WriteString("hello test")
+    }
+    ```
+
+    
+
+  + 带缓冲 bufio
+
+    ```go
+    func Test_writeDemo2(t *testing.T) {
+    	// 打开文件
+    	file, err := os.OpenFile("./write_test", os.O_CREATE|os.O_APPEND|os.O_RDWR|os.O_TRUNC, 0666)
+    	if err != nil {
+    		fmt.Println("os.OpenFile err = ", err)
+    	}
+    	defer file.Close()
+    
+    	// 使用bufiosh生成writer
+    	writer := bufio.NewWriter(file)
+    	writer.WriteString("this is bufio writer")
+    
+    	// Flush方法将缓冲中的数据写入下层的io.Writer接口。
+    	writer.Flush()
+    }
+    ```
+
+    
+
+  + 不带缓冲 ioutil
+
+    ```go
+    func Test_writeDemo3(t *testing.T) {
+    	err := ioutil.WriteFile("./write_test", []byte("happy"), 0666)
+    	if err != nil {
+    		fmt.Println("write file failed, err:", err)
+    		return
+    	}
+    }
+    ```
+
+    
+
+
+
+拷贝文件
+
+```go
+func Test_CopyFile(t *testing.T) {
+	copy_file("./test", "./copy_test")
+}
+
+func copy_file(srcName, dstName string) {
+	// 打开源文件
+	srcFile, err := os.OpenFile(srcName, os.O_RDONLY, 0666)
+	if err != nil {
+		fmt.Println(" srcName os.OpenFile err = ", err)
+	}
+	defer srcFile.Close()
+
+	// 打开目标文件
+	dstFile, err := os.OpenFile(dstName, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
+	if err != nil {
+		fmt.Println(" dstName os.OpenFile err = ", err)
+	}
+	defer dstFile.Close()
+
+	io.Copy(dstFile, srcFile)
+}
+```
+
+
 
 
 
 ## 并发协程
 
-同步锁：不同goroutine对公共资源进行访问
+并发：同一时间段内执行多个任务
+
+并行：同一时间点执行多个任务
+
+
+
+进程(process)：程序在操作系统中的一次执行过程，系统进行资源分配和调度的一个独立单位
+
+线程(thread)：操作系统基于进程开启的轻量级进程，是操作系统调度执行的最小单位
+
+协程(goroutine)：非操作系统提供而是由用户自行创建和控制的用户态‘线程’，比线程更轻量级
+
+
+
+并发模型：CSP模型
+
+
+
+
+
+```go
+func main() {
+	for i := 0; i < 10; i++ {
+		go func(num int) {
+			fmt.Println("num = ", num)
+		}(i)
+	}
+	time.Sleep(time.Duration(10) * time.Second)
+}
+```
+
+
+
+
+
+
 
 管道：不同goroutine之间交换信息
+
+```go
+// 初始化channel: make(chan 元素类型, [缓冲大小])   channel的缓冲大小是可选的。
+
+// 无缓冲的通道
+/*
+无缓冲的通道只有在有接收方能够接收值的时候才能发送成功，否则会一直处于等待发送的阶段。同理，如果对一个无缓冲通道执行接收操作时，没有任何向通道中发送值的操作那么也会导致接收操作阻塞
+因为这一特性，使用无缓冲通道进行通信将导致发送和接收的goroutine 同步化。因此，无缓冲通道也被称为同步通道
+*/
+func main() {
+	ch := make(chan int)
+	ch <- 10
+	fmt.Println("发送成功")
+} 
+// 结果
+fatal error: all goroutines are asleep - deadlock!
+
+goroutine 1 [chan send]:
+main.main()
+        .../main.go:8 +0x54
+// 可修改如下
+func recv(c chan int) {
+	ret := <-c
+	fmt.Println("接收成功", ret)
+}
+
+func main() {
+	ch := make(chan int)
+	go recv(ch) // 创建一个 goroutine 从通道接收值，且顺序不能改
+	ch <- 10
+	fmt.Println("发送成功")
+}
+
+// 有缓冲的通道
+/*
+只要通道的容量大于零，那么该通道就属于有缓冲的通道，通道的容量表示通道中最大能存放的元素数量。当通道内已有元素数达到最大容量后，再向通道执行发送操作就会阻塞，除非有从通道执行接收操作
+*/
+func Test_buf(t *testing.T) {
+	chan1 := make(chan int, 1)
+	chan1 <- 1
+	num := <-chan1
+	fmt.Println("num = ", num)
+}
+
+// 当向通道中发送完数据时，我们可以通过close函数来关闭通道。当一个通道被关闭后，再往该通道发送值会引发panic，从该通道取值的操作会先取完通道中的值。通道内的值被接收完后再对通道执行接收操作得到的值会一直都是对应元素类型的零值
+// 可以使用多返回值来实现安全接收
+value, ok := <- ch
+/*
+value：从通道中取出的值，如果通道被关闭则返回对应类型的零值。
+ok：通道ch关闭时返回 false，否则返回 true。
+*/
+
+
+
+
+// 单向通道
+<- chan int // 只接收通道，只能接收不能发送
+chan <- int // 只发送通道，只能发送不能接收
+```
+
+
+
+
+
+同步锁：不同goroutine对公共资源进行访问
+
+使用sync包中的 Mutex 类型来实现互斥锁
+
+```go
+var x int
+var m sync.Mutex      // 互斥锁
+var wg sync.WaitGroup // 等待组
+
+func Test_SyncMutex(t *testing.T) {
+	wg.Add(2)
+	go add()
+	go add()
+	wg.Wait()
+	fmt.Println("x = ",x)
+}
+func add() {
+	for i := 0; i < 5000; i++ {
+		m.Lock() // 修改前加锁
+		x += 1
+		m.Unlock() // 修改后解锁
+	}
+	wg.Done()
+}
+
+
+// 结果
+10000
+```
+
+使用 sync包中的 RWMutex 类型来实现读写互斥锁 // 使用读写互斥锁在读多写少的场景下能够极大地提高程序的性能
+
+```go
+package goroutine_test
+
+import (
+	"fmt"
+	"sync"
+	"testing"
+	"time"
+)
+
+var (
+	x1      int
+	wg1     sync.WaitGroup
+	mutex   sync.Mutex
+	rwMutex sync.RWMutex
+)
+
+func Test_RWMutex(t *testing.T) {
+    // 读多写少的情况下，使用读写互斥锁可以加快速度
+	// 使用互斥锁，10并发写，1000并发读
+	do(writeWithLock, readWithLock, 10, 1000) // x:1010 cost:16.0170156s
+
+	// 使用读写互斥锁，10并发写，1000并发读
+	do(writeWithRWLock, readWithRWLock, 10, 1000) // x:1010 cost:16.0170156s
+}
+
+// 使用互斥锁的写操作
+func writeWithLock() {
+	mutex.Lock() // 加互斥锁
+	x += 1
+	time.Sleep(10 * time.Millisecond)
+	mutex.Unlock() // 解锁
+	wg.Done()
+}
+
+// 使用互斥锁的写操作
+func readWithLock() {
+	mutex.Lock() // 加互斥锁
+	x += 1
+	time.Sleep(10 * time.Millisecond)
+	mutex.Unlock() // 解锁
+	wg.Done()
+
+}
+
+// 使用读写互斥锁的写操作
+func writeWithRWLock() {
+	rwMutex.Lock()
+	x = x + 1
+	time.Sleep(10 * time.Millisecond) // 假设读操作耗时10毫秒
+	rwMutex.Unlock()
+	wg.Done()
+}
+
+func readWithRWLock() {
+	rwMutex.RLock()
+	x = x + 1
+	time.Sleep(10 * time.Millisecond) // 假设读操作耗时10毫秒
+	rwMutex.RUnlock()
+	wg.Done()
+}
+
+func do(wf, rf func(), wc, rc int) {
+	start := time.Now()
+	// wc个并发写操作
+	for i := 0; i < wc; i++ {
+		wg.Add(1)
+		go wf()
+	}
+
+	//  rc个并发读操作
+	for i := 0; i < rc; i++ {
+		wg.Add(1)
+		go rf()
+	}
+
+	wg.Wait()
+	cost := time.Since(start)
+	fmt.Printf("x:%v cost:%v\n", x, cost)
+
+}
+
+```
+
+使用 sync.WaitGroup 来实现并发任务的同步
+
+|                方法名                |        功能         |
+| :----------------------------------: | :-----------------: |
+| func (wg * WaitGroup) Add(delta int) |    计数器+delta     |
+|        (wg *WaitGroup) Done()        |      计数器-1       |
+|        (wg *WaitGroup) Wait()        | 阻塞直到计数器变为0 |
+
+```go
+var wg sync.WaitGroup
+
+func hello() {
+	defer wg.Done()
+	fmt.Println("Hello Goroutine!")
+}
+func main() {
+	wg.Add(1)
+	go hello() // 启动另外一个goroutine去执行hello函数
+	fmt.Println("main goroutine done!")
+	wg.Wait()
+}
+```
+
+
+
+
 
 
 
 ## 反射
 
 动态代理及框架中大量使用反射机制
+
+反射是指在程序运行期间对程序本身进行访问和修改的能力
+
+Go程序在运行期使用**reflect**包访问程序的反射信息。
+
+```go
+```
 
 
 
@@ -805,6 +1826,14 @@ m := fmin(2.71, 3.14)
   虽然类型推断的工作原理细节很复杂， 但使用它并不复杂：类型推断要么成功，要么失败。如果它成功，类型实参可以被省略，调用泛型函数看起来与调用普通函数没有什么不同。如果类型推断失败，编译器将给出错误消息，在这种情况下，只需提供必要的类型实参
 
 
+
+
+
+## 目录结构
+
+gomod
+
+gopath
 
 
 
