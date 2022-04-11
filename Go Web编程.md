@@ -30,7 +30,9 @@ OSI七层模型(理论上的标准) / TCP/IP (事实上的标准)
 
 
 
-1. 根据以上编写的单次请求响应
+1. golang是实现TCP通信
+
+   TCP/IP(Transmission Control Protocol/Internet Protocol) 即传输控制协议/网间协议，是一种面向连接（连接导向）的、可靠的、基于字节流的传输层（Transport layer）通信协议
 
    ```go
    // 客户端
@@ -99,9 +101,70 @@ OSI七层模型(理论上的标准) / TCP/IP (事实上的标准)
 
    
 
-2. 并发服务器
+2. golang是实现UDP通信
 
+   UDP是一种**无连接**的传输层协议，不需要建立连接就能直接进行数据发送和接收，属于不可靠的、没有时序的通信，但是UDP协议的实时性比较好，通常用于视频直播相关领域
 
+   ```go
+   // 客户端
+   package main
+   
+   import (
+   	"fmt"
+   	"net"
+   )
+   
+   func main() {
+   	socket, err := net.DialUDP("udp", nil, &net.UDPAddr{
+   		IP:   net.IPv4(127, 0, 0, 1),
+   		Port: 30000,
+   	})
+   
+   	if err != nil {
+   		fmt.Println("net.DialUDP err = ", err)
+   		return
+   	}
+   	_, err = socket.Write([]byte("hello udp protocl"))
+   	if err != nil {
+   		fmt.Println("发送数据失败，err:", err)
+   		return
+   	}
+   }
+   
+   ```
+
+   ```go
+   // 服务端
+   package main
+   
+   import (
+   	"fmt"
+   	"net"
+   )
+   
+   func main() {
+   	listen, err := net.ListenUDP("udp", &net.UDPAddr{
+   		IP:   net.IPv4(127, 0, 0, 1),
+   		Port: 30000,
+   	})
+   	if err != nil {
+   		fmt.Println("net.Listen err = ", err)
+   		return
+   	}
+   	defer listen.Close()
+   
+   	buf := make([]byte, 1024)
+   	num, addr, err1 := listen.ReadFromUDP(buf)
+   	if err1 != nil {
+   		fmt.Println("listen.ReadFromUDP err = ", err1)
+   		return
+   	}
+   	fmt.Printf("data:%v addr:%v count:%v\n", string(buf[:num]), addr, num)
+   
+   }
+   ```
+
+   
 
 
 
